@@ -1,0 +1,39 @@
+Transform: AWS::Serverless-2016-10-31
+
+Description: API for Kanban
+
+Resources:
+  KanbanApi:
+    Type: AWS::Serverless::HttpApi
+
+  Lists:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: lists
+      PrimaryKey:
+        Name: uuid
+        Type: String
+
+  Cards:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: cards
+      PrimaryKey:
+        Name: uuid
+        Type: String
+
+  Lists/Index:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      PackageType: Zip
+      Handler: lists/index.Lists::Index.handler
+      Runtime: ruby2.7
+      MemorySize: 128
+      Timeout: 10
+      Events:
+        Invoke:
+          Type: HttpApi
+          Method: GET
+          Path: /lists
+          ApiId: !Ref KanbanApi
