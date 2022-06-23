@@ -2,6 +2,14 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: API for Kanban
 
+Globals:
+  Function:
+    Timeout: 10
+    Environment:
+      Variables:
+        LISTS_TABLE: !Ref Lists
+        CARDS_TABLE: !Ref Cards
+
 Resources:
   KanbanApi:
     Type: AWS::Serverless::HttpApi
@@ -13,7 +21,6 @@ Resources:
       PrimaryKey:
         Name: uuid
         Type: String
-
   Cards:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -22,7 +29,7 @@ Resources:
         Name: uuid
         Type: String
 
-  Lists/Index:
+  ListsIndex:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
@@ -31,9 +38,18 @@ Resources:
       Runtime: ruby2.7
       MemorySize: 128
       Timeout: 10
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref Lists
       Events:
         Invoke:
           Type: HttpApi
-          Method: GET
-          Path: /lists
-          ApiId: !Ref KanbanApi
+          Properties:
+            Method: GET
+            Path: /lists
+            ApiId: !Ref KanbanApi
+
+Outputs:
+  LambdaProjectHttpApiUrl:
+    Description: Kanban API URL
+    Value: !Sub https://${KanbanApi}.execute-api.${AWS::Region}.amazonaws.com/
