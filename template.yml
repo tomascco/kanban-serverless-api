@@ -5,7 +5,6 @@ Description: API for Kanban
 Globals:
   Function:
     CodeUri: app/
-    PackageType: Zip
     Timeout: 10
     Runtime: ruby2.7
     MemorySize: 128
@@ -40,6 +39,9 @@ Resources:
         KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
+  KanbanBucket:
+    Type: AWS::S3::Bucket
+
   KanbanUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -71,6 +73,7 @@ Resources:
   FetchLists:
     Type: AWS::Serverless::Function
     Properties:
+      PackageType: Zip
       Handler: fetch_lists.FetchLists.handler
       Policies:
         - DynamoDBReadPolicy:
@@ -85,6 +88,7 @@ Resources:
   FetchCards:
     Type: AWS::Serverless::Function
     Properties:
+      PackageType: Zip
       Handler: fetch_cards.FetchCards.handler
       Timeout: 10
       Policies:
@@ -100,6 +104,7 @@ Resources:
   CreateList:
     Type: AWS::Serverless::Function
     Properties:
+      PackageType: Zip
       Handler: create_list.CreateList.handler
       Policies:
         - DynamoDBWritePolicy:
@@ -114,6 +119,7 @@ Resources:
   CreateCard:
     Type: AWS::Serverless::Function
     Properties:
+      PackageType: Zip
       Handler: create_card.CreateCard.handler
       Policies:
         - DynamoDBWritePolicy:
@@ -124,6 +130,26 @@ Resources:
           Properties:
             Method: POST
             Path: /lists/{listUUID}/cards
+            RestApiId: !Ref KanbanApi
+  UploadAttachmentToCard:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Zip
+      Handler: upload_attachment_to_card.UploadAttachmentToCard.handler
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref KanbanBucket
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref KanbanTable
+        - S3WritePolicy:
+            BucketName: !Ref KanbanBucket
+      Events:
+        Invoke:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /lists/{listUUID}/cards/{cardUUID}/attach
             RestApiId: !Ref KanbanApi
 
 Outputs:
