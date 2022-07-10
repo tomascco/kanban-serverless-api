@@ -4,7 +4,11 @@ Description: API for Kanban
 
 Globals:
   Function:
+    CodeUri: app/
+    PackageType: Zip
     Timeout: 10
+    Runtime: ruby2.7
+    MemorySize: 128
     Environment:
       Variables:
         KANBAN_TABLE: !Ref KanbanTable
@@ -67,12 +71,7 @@ Resources:
   FetchLists:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: app/
-      PackageType: Zip
       Handler: fetch_lists.FetchLists.handler
-      Runtime: ruby2.7
-      MemorySize: 128
-      Timeout: 10
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref KanbanTable
@@ -83,15 +82,10 @@ Resources:
             Method: GET
             Path: /lists
             RestApiId: !Ref KanbanApi
-
   FetchCards:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: app/
-      PackageType: Zip
       Handler: fetch_cards.FetchCards.handler
-      Runtime: ruby2.7
-      MemorySize: 128
       Timeout: 10
       Policies:
         - DynamoDBReadPolicy:
@@ -103,16 +97,10 @@ Resources:
             Method: GET
             Path: /lists/{listUUID}
             RestApiId: !Ref KanbanApi
-
   CreateList:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: app/
-      PackageType: Zip
       Handler: create_list.CreateList.handler
-      Runtime: ruby2.7
-      MemorySize: 128
-      Timeout: 10
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref KanbanTable
