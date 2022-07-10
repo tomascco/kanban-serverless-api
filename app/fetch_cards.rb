@@ -5,16 +5,16 @@ require_relative 'lambda_base'
 class FetchCards < LambdaBase
   def handler(event:, context:)
     username = event.dig('requestContext', 'authorizer', 'claims', 'cognito:username')
-    list_id = event.dig('pathParameters', 'listID')
+    list_uuid = event.dig('pathParameters', 'listUUID')
 
     result = table.query({
-      key_condition_expression: '#user = :username AND begins_with(ListsAndCardsCollection, :list_id)',
+      key_condition_expression: '#user = :username AND begins_with(ListsAndCardsCollection, :list_uuid)',
       expression_attribute_names: {
         '#user' => 'User'
       },
       expression_attribute_values: {
         ':username' => username,
-        ':list_id' => list_id
+        ':list_uuid' => list_uuid
       }
     })
 

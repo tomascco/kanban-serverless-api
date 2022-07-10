@@ -101,7 +101,7 @@ Resources:
           Type: Api
           Properties:
             Method: GET
-            Path: /lists/{listID}
+            Path: /lists/{listUUID}
             RestApiId: !Ref KanbanApi
 
   CreateList:

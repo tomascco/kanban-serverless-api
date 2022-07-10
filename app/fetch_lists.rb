@@ -4,7 +4,6 @@ require_relative 'lambda_base'
 
 class FetchLists < LambdaBase
   def handler(event:, context:)
-
     username = event.dig('requestContext', 'authorizer', 'claims', 'cognito:username')
 
     result = table.query({
