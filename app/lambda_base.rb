@@ -11,17 +11,15 @@ class LambdaBase
     instance.handler(...)
   end
 
+  def initialize
+    @table = Aws::DynamoDB::Table.new(ENV.fetch('KANBAN_TABLE'), Aws::DynamoDB::Client.new)
+  end
+
   def handler(event:, context:)
     raise NotImplementedError
   end
 
   private
 
-  def table_name
-    raise NotImplementedError
-  end
-
-  def table
-    @table ||= Aws::DynamoDB::Table.new(table_name, Aws::DynamoDB::Client.new)
-  end
+  attr_reader :table
 end

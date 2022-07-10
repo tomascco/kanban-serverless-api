@@ -7,68 +7,91 @@ Globals:
     Timeout: 10
     Environment:
       Variables:
-        LISTS_TABLE: !Ref Lists
-        CARDS_TABLE: !Ref Cards
+        KANBAN_TABLE: !Ref KanbanTable
 
 Resources:
   KanbanApi:
-    Type: AWS::Serverless::HttpApi
-
-  Lists:
-    Type: AWS::Serverless::SimpleTable
+    Type: AWS::Serverless::Api
     Properties:
-      TableName: lists
-      PrimaryKey:
-        Name: uuid
-        Type: String
-  Cards:
-    Type: AWS::Serverless::SimpleTable
-    Properties:
-      TableName: cards
-      PrimaryKey:
-        Name: uuid
-        Type: String
+      StageName: production
+      Auth:
+        DefaultAuthorizer: KanbanUsersAuthorizer
+        Authorizers:
+          KanbanUsersAuthorizer:
+            UserPoolArn: !GetAtt KanbanUserPool.Arn
 
-  ListsIndex:
+  KanbanTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: kanban
+      AttributeDefinitions:
+      - AttributeName: User
+        AttributeType: S
+      - AttributeName: ListsAndCardsCollection
+        AttributeType: S
+      KeySchema:
+      - AttributeName: User
+        KeyType: HASH
+      - AttributeName: ListsAndCardsCollection
+        KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  KanbanUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: Kanban Users
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+  KanbanUserClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref KanbanUserPool
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - http://localhost:3000
+      AllowedOAuthScopes:
+        - openid
+        - email
+      AllowedOAuthFlows:
+        - implicit
+      SupportedIdentityProviders:
+        - COGNITO
+  KanbanUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: kanban-api
+      UserPoolId: !Ref KanbanUserPool
+
+  FetchUserListsAndCards:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: app/
       PackageType: Zip
-      Handler: lists/index.Lists::Index.handler
+      Handler: app/fetch_user_lists_and_cards.rb.FetchUserListsAndCards.handler
       Runtime: ruby2.7
       MemorySize: 128
       Timeout: 10
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref Lists
+            TableName: !Ref KanbanTable
       Events:
         Invoke:
-          Type: HttpApi
+          Type: Api
           Properties:
             Method: GET
             Path: /lists
-            ApiId: !Ref KanbanApi
-  ListsCreate:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: app/
-      PackageType: Zip
-      Handler: lists/create.Lists::Create.handler
-      Runtime: ruby2.7
-      MemorySize: 128
-      Timeout: 10
-      Policies:
-        - DynamoDBWritePolicy:
-            TableName: !Ref Lists
-      Events:
-        Invoke:
-          Type: HttpApi
-          Properties:
-            Method: POST
-            Path: /lists
-            ApiId: !Ref KanbanApi
+            RestApiId: !Ref KanbanApi
+
 
 Outputs:
-  LambdaProjectHttpApiUrl:
+  LambdaProjectApiUrl:
     Description: Kanban API URL
     Value: !Sub https://${KanbanApi}.execute-api.${AWS::Region}.amazonaws.com/
+  Register:
+    Value: !Sub https://${KanbanUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/signup?client_id=${KanbanUserClient}&response_type=token&scope=openid&redirect_uri=http://localhost:3000
+    Description: Register page
+  Login:
+    Value: !Sub https://${KanbanUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${KanbanUserClient}&response_type=token&scope=openid&redirect_uri=http://localhost:3000
+    Description: Login page
