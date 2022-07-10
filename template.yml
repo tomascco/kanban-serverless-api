@@ -84,6 +84,25 @@ Resources:
             Path: /lists
             RestApiId: !Ref KanbanApi
 
+  FetchCards:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      PackageType: Zip
+      Handler: fetch_cards.FetchCards.handler
+      Runtime: ruby2.7
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref KanbanTable
+      Events:
+        Invoke:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /lists/{listID}
+            RestApiId: !Ref KanbanApi
 
 Outputs:
   LambdaProjectApiUrl:
