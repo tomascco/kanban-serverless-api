@@ -104,6 +104,26 @@ Resources:
             Path: /lists/{listID}
             RestApiId: !Ref KanbanApi
 
+  CreateList:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      PackageType: Zip
+      Handler: create_list.CreateList.handler
+      Runtime: ruby2.7
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref KanbanTable
+      Events:
+        Invoke:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /lists
+            RestApiId: !Ref KanbanApi
+
 Outputs:
   LambdaProjectApiUrl:
     Description: Kanban API URL
