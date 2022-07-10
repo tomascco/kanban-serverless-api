@@ -64,12 +64,12 @@ Resources:
       Domain: kanban-api
       UserPoolId: !Ref KanbanUserPool
 
-  FetchUserListsAndCards:
+  FetchLists:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: app/
       PackageType: Zip
-      Handler: app/fetch_user_lists_and_cards.rb.FetchUserListsAndCards.handler
+      Handler: fetch_lists.FetchLists.handler
       Runtime: ruby2.7
       MemorySize: 128
       Timeout: 10
