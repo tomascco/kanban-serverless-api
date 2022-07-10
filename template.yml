@@ -111,6 +111,20 @@ Resources:
             Method: POST
             Path: /lists
             RestApiId: !Ref KanbanApi
+  CreateCard:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: create_card.CreateCard.handler
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref KanbanTable
+      Events:
+        Invoke:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /lists/{listUUID}/cards
+            RestApiId: !Ref KanbanApi
 
 Outputs:
   LambdaProjectApiUrl:
